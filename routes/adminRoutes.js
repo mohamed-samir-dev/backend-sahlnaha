@@ -179,11 +179,14 @@ router.delete("/company/image/:field", authMiddleware, async (req, res) => {
     if (!allowed.includes(field)) return res.status(400).json({ error: "حقل غير مسموح" });
     const company = await Company.findOne();
     if (!company) return res.json({ success: true });
-    await deleteFromCloudinary(company[field]);
+    if (company[field]) {
+      try { await deleteFromCloudinary(company[field]); } catch (e) { console.error("cloudinary delete error:", e.message); }
+    }
     company[field] = "";
     await company.save();
     res.json({ success: true });
-  } catch {
+  } catch (err) {
+    console.error("company/image/:field error:", err);
     res.status(500).json({ error: "خطأ في الخادم" });
   }
 });
