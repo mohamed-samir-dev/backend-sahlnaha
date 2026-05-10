@@ -3,11 +3,29 @@ const mongoose = require("mongoose");
 const productSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
+    brief: { type: String },
+    description: { type: String },
     originalPrice: { type: Number, required: true },
     salePrice: { type: Number },
-    description: { type: String },
     image: { type: String },
     images: [{ type: String }],
+    gallery: [
+      {
+        url: { type: String },
+        caption: { type: String },
+      },
+    ],
+    specifications: [
+      {
+        groupName: { type: String },
+        items: [
+          {
+            label: { type: String },
+            value: { type: String },
+          },
+        ],
+      },
+    ],
     color: { type: String },
     storage: { type: String },
     network: { type: String },
@@ -41,6 +59,18 @@ const productSchema = new mongoose.Schema(
     subCategory: { type: String },
     brand: { type: String },
     inStock: { type: Boolean, default: true },
+    rating: {
+      average: { type: Number, default: 0 },
+      count: { type: Number, default: 0 },
+    },
+    reviews: [
+      {
+        name: { type: String },
+        rate: { type: Number },
+        comment: { type: String },
+        date: { type: String },
+      },
+    ],
     colors: { type: mongoose.Schema.Types.Mixed },
     overview: { type: String },
     features: { type: mongoose.Schema.Types.Mixed },

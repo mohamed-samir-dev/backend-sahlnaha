@@ -1,7 +1,5 @@
 const iphone17ProMax512 = [
   {
-    _id: "69ea542847825c3bcd5b7886",
-
     name: "أبل آيفون 17 برو ماكس، 5G، 6.9 بوصة، سيلفر، 512 جيجابايت",
 
     originalPrice: 6500,
