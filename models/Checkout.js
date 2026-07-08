@@ -25,6 +25,7 @@ const checkoutSchema = new mongoose.Schema(
     months: { type: Number, default: 0 },
     monthlyPayment: { type: Number, default: 0 },
     status: { type: String, enum: ["pending", "confirmed", "cancelled"], default: "pending" },
+    deviceIp: { type: String },
   },
   { timestamps: true }
 );
