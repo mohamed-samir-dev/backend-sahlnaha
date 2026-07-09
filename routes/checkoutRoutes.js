@@ -20,21 +20,6 @@ router.post("/", async (req, res) => {
       req.headers["x-forwarded-for"]?.split(",")[0].trim() ||
       req.socket.remoteAddress;
 
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-
-    const todayCount = await Checkout.countDocuments({
-      deviceIp,
-      createdAt: { $gte: startOfDay },
-    });
-
-    if (todayCount >= 5) {
-      return res.status(429).json({
-        ok: false,
-        error: "لقد تجاوزت الحد المسموح به من الطلبات اليومية (5 طلبات)",
-      });
-    }
-
     const checkout = new Checkout({ ...req.body, deviceIp });
     await checkout.save();
     res.status(201).json({ ok: true, orderId: checkout.orderId });
