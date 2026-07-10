@@ -11,6 +11,14 @@ const adminRoutes = require("./routes/adminRoutes");
 connectDB();
 
 const app = express();
+
+app.use((req, res, next) => {
+  if (req.hostname === "madaar-electronics.com" || req.hostname === "www.madaar-electronics.com") {
+    return res.redirect(301, "https://madar-electronics.com" + req.originalUrl);
+  }
+  next();
+});
+
 const allowedOrigins = (process.env.FRONTEND_URL || "http://localhost:3000")
   .split(",").map((o) => o.trim());
 
