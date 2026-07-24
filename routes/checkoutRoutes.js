@@ -52,7 +52,7 @@ router.put("/:id/status", authMiddleware, async (req, res) => {
     const order = await Checkout.findByIdAndUpdate(
       req.params.id,
       { status: req.body.status },
-      { new: true }
+      { returnDocument: 'after' }
     );
     res.json(order);
   } catch (err) {
@@ -66,7 +66,7 @@ router.put("/:id/financials", authMiddleware, async (req, res) => {
     const order = await Checkout.findByIdAndUpdate(
       req.params.id,
       { total, downPayment, months, monthlyPayment },
-      { new: true }
+      { returnDocument: 'after' }
     );
     res.json(order);
   } catch (err) {

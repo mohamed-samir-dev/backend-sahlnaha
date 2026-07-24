@@ -44,7 +44,7 @@ router.get("/device-logs", auth, async (req, res) => {
 router.patch("/device-logs/:id", auth, async (req, res) => {
   try {
     const { label, buyerName } = req.body;
-    const doc = await DeviceLog.findByIdAndUpdate(req.params.id, { $set: { label, buyerName } }, { new: true });
+    const doc = await DeviceLog.findByIdAndUpdate(req.params.id, { $set: { label, buyerName } }, { returnDocument: 'after' });
     res.json(doc);
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -55,6 +55,16 @@ router.patch("/device-logs/:id", auth, async (req, res) => {
 router.delete("/device-logs/:id", auth, async (req, res) => {
   try {
     await DeviceLog.findByIdAndDelete(req.params.id);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Delete ALL logs
+router.delete("/device-logs", auth, async (req, res) => {
+  try {
+    await DeviceLog.deleteMany({});
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -116,6 +126,16 @@ router.patch("/blocked-devices/:id/toggle", auth, async (req, res) => {
 router.delete("/blocked-devices/:id", auth, async (req, res) => {
   try {
     await BlockedDevice.findByIdAndDelete(req.params.id);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Delete ALL blocked devices
+router.delete("/blocked-devices", auth, async (req, res) => {
+  try {
+    await BlockedDevice.deleteMany({});
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });

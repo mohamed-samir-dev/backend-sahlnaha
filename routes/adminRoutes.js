@@ -508,7 +508,7 @@ router.patch("/sub-categories/settings/toggle", authMiddleware, async (req, res)
     const doc = await SubCategorySettings.findOneAndUpdate(
       { category, subCategory },
       { $set: { showInHome: newValue } },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
     );
     res.json({ showInHome: doc.showInHome });
   } catch (err) {
@@ -563,7 +563,7 @@ router.post("/sub-categories/settings/image", authMiddleware, makeImageUpload().
     await SubCategorySettings.findOneAndUpdate(
       { category, subCategory: category },
       { $set: { image: result.secure_url } },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
     );
     res.json({ url: result.secure_url });
   } catch (err) {
@@ -601,7 +601,7 @@ router.patch("/sub-categories/max", authMiddleware, async (req, res) => {
     await SubCategorySettings.findOneAndUpdate(
       { category: "__config__", subCategory: "__max__" },
       { $set: { order: val, showInHome: false } },
-      { upsert: true }
+      { upsert: true, returnDocument: 'after' }
     );
     res.json({ max: val });
   } catch {
@@ -636,7 +636,7 @@ router.put("/orders/:id/status", authMiddleware, async (req, res) => {
     const order = await Checkout.findByIdAndUpdate(
       req.params.id,
       { status: req.body.status },
-      { new: true }
+      { returnDocument: 'after' }
     );
     if (!order) return res.status(404).json({ ok: false, error: "not found" });
     res.json(order);
@@ -697,7 +697,7 @@ router.put("/reviews/:id", authMiddleware, async (req, res) => {
     const review = await Review.findByIdAndUpdate(
       req.params.id,
       { name, comment, rating: rating || 5, gender: gender || "male" },
-      { new: true }
+      { returnDocument: 'after' }
     );
     if (!review) return res.status(404).json({ error: "التعليق غير موجود" });
     res.json(review);
@@ -709,7 +709,7 @@ router.put("/reviews/:id", authMiddleware, async (req, res) => {
 // PATCH /api/admin/reviews/:id/approve
 router.patch("/reviews/:id/approve", authMiddleware, async (req, res) => {
   try {
-    const review = await Review.findByIdAndUpdate(req.params.id, { approved: true }, { new: true });
+    const review = await Review.findByIdAndUpdate(req.params.id, { approved: true }, { returnDocument: 'after' });
     if (!review) return res.status(404).json({ error: "التعليق غير موجود" });
     res.json({ success: true });
   } catch {
