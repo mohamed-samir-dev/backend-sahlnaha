@@ -16,9 +16,9 @@ function auth(req, res, next) {
 router.post("/device-logs", async (req, res) => {
   try {
     const { fingerprint, ip, userAgent, path } = req.body;
-    if (!fingerprint && !ip) return res.status(400).json({ error: "fingerprint or ip required" });
+    if (!fingerprint && !ip && !userAgent) return res.status(400).json({ error: "at least one identifier required" });
 
-    const filter = fingerprint ? { fingerprint } : { ip };
+    const filter = fingerprint ? { fingerprint } : ip ? { ip } : { userAgent };
     await DeviceLog.findOneAndUpdate(
       filter,
       { $set: { ip, userAgent, path, lastSeen: new Date() }, $setOnInsert: { fingerprint, firstSeen: new Date() }, $inc: { requestsCount: 1 } },
