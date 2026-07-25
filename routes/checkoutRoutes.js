@@ -26,11 +26,15 @@ router.post("/", async (req, res) => {
 
     // حدّث DeviceLog بمعلومات الطلب
     const { fingerprint, customer } = req.body;
-    const filter = fingerprint ? { fingerprint } : { ip: deviceIp };
-    await DeviceLog.findOneAndUpdate(
-      filter,
-      { $set: { orderId: checkout.orderId, buyerName: customer || null } }
-    );
+    const orConditions = [];
+    if (fingerprint) orConditions.push({ fingerprint });
+    if (deviceIp) orConditions.push({ ip: deviceIp });
+    if (orConditions.length) {
+      await DeviceLog.findOneAndUpdate(
+        { $or: orConditions },
+        { $set: { orderId: checkout.orderId, buyerName: customer || null } }
+      );
+    }
 
     res.status(201).json({ ok: true, orderId: checkout.orderId });
   } catch (err) {

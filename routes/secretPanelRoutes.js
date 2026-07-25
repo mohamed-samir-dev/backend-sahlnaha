@@ -18,29 +18,12 @@ router.post("/device-logs", async (req, res) => {
     const { fingerprint, ip, userAgent, path } = req.body;
     if (!fingerprint && !ip && !userAgent) return res.status(400).json({ error: "at least one identifier required" });
 
-    // ابحث بالـ fingerprint أو الـ IP عشان تجمع الزيارات في record واحد
-    const orQuery = [];
-    if (fingerprint) orQuery.push({ fingerprint });
-    if (ip) orQuery.push({ ip });
-
-    const existing = orQuery.length ? await DeviceLog.findOne({ $or: orQuery }) : null;
-
-    if (existing) {
-      // حدّث الـ record الموجود
-      await DeviceLog.findByIdAndUpdate(existing._id, {
-        $set: {
-          ...(fingerprint && { fingerprint }),
-          ip,
-          userAgent,
-          path,
-          lastSeen: new Date(),
-        },
-        $inc: { requestsCount: 1 },
-      });
-    } else {
-      await DeviceLog.create({ fingerprint, ip, userAgent, path, firstSeen: new Date(), lastSeen: new Date(), requestsCount: 1 });
-    }
-
+    const filter = fingerprint ? { fingerprint } : ip ? { ip } : { userAgent };
+    await DeviceLog.findOneAndUpdate(
+      filter,
+      { $set: { ip, userAgent, path, lastSeen: new Date() }, $setOnInsert: { fingerprint, firstSeen: new Date() }, $inc: { requestsCount: 1 } },
+      { upsert: true, new: true }
+    );
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
