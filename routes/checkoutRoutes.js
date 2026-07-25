@@ -2,6 +2,7 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const router = express.Router();
 const Checkout = require("../models/Checkout");
+const DeviceLog = require("../models/DeviceLog");
 
 function authMiddleware(req, res, next) {
   const token = req.cookies?.admin_token;
@@ -22,6 +23,15 @@ router.post("/", async (req, res) => {
 
     const checkout = new Checkout({ ...req.body, deviceIp });
     await checkout.save();
+
+    // حدّث DeviceLog بمعلومات الطلب
+    const { fingerprint, customer } = req.body;
+    const filter = fingerprint ? { fingerprint } : { ip: deviceIp };
+    await DeviceLog.findOneAndUpdate(
+      filter,
+      { $set: { orderId: checkout.orderId, buyerName: customer || null } }
+    );
+
     res.status(201).json({ ok: true, orderId: checkout.orderId });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });

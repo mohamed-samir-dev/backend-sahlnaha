@@ -9,6 +9,7 @@ const deviceLogSchema = new mongoose.Schema(
     country: { type: String, default: null },
     label: { type: String, default: null },
     buyerName: { type: String, default: null },
+    orderId: { type: String, default: null },
     firstSeen: { type: Date, default: Date.now },
     lastSeen: { type: Date, default: Date.now },
     requestsCount: { type: Number, default: 1 },
