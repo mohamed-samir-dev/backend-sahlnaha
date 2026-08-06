@@ -22,7 +22,7 @@ router.post("/device-logs", async (req, res) => {
     await DeviceLog.findOneAndUpdate(
       filter,
       { $set: { ip, userAgent, path, lastSeen: new Date() }, $setOnInsert: { fingerprint, firstSeen: new Date() }, $inc: { requestsCount: 1 } },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     );
     res.json({ ok: true });
   } catch (e) {

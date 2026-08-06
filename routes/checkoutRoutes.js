@@ -1,19 +1,8 @@
 const express = require("express");
-const jwt = require("jsonwebtoken");
 const router = express.Router();
 const Checkout = require("../models/Checkout");
 const DeviceLog = require("../models/DeviceLog");
-
-function authMiddleware(req, res, next) {
-  const token = req.cookies?.admin_token;
-  if (!token) return res.status(401).json({ error: "غير مصرح" });
-  try {
-    req.admin = jwt.verify(token, process.env.JWT_SECRET);
-    next();
-  } catch {
-    res.status(401).json({ error: "غير مصرح" });
-  }
-}
+const authMiddleware = require("../middleware/auth");
 
 router.post("/", async (req, res) => {
   try {
@@ -42,18 +31,18 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.get("/", async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
   try {
-    const orders = await Checkout.find().sort({ createdAt: -1 });
+    const orders = await Checkout.find().sort({ createdAt: -1 }).lean();
     res.json(orders);
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", authMiddleware, async (req, res) => {
   try {
-    const order = await Checkout.findById(req.params.id);
+    const order = await Checkout.findById(req.params.id).lean();
     if (!order) return res.status(404).json({ ok: false, error: "not found" });
     res.json(order);
   } catch (err) {

@@ -10,13 +10,27 @@ cloudinary.config({
 
 const memoryStorage = multer.memoryStorage();
 
-function makeImageUpload() {
-  return multer({ storage: memoryStorage, limits: { fileSize: 5 * 1024 * 1024 } });
-}
+const imageUpload = multer({
+  storage: memoryStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith("image/")) return cb(new Error("Images only"));
+    cb(null, true);
+  },
+});
 
-function makeFileUpload() {
-  return multer({ storage: memoryStorage, limits: { fileSize: 20 * 1024 * 1024 } });
-}
+const fileUpload = multer({
+  storage: memoryStorage,
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith("image/") && file.mimetype !== "application/pdf")
+      return cb(new Error("Images and PDFs only"));
+    cb(null, true);
+  },
+});
+
+function makeImageUpload() { return imageUpload; }
+function makeFileUpload() { return fileUpload; }
 
 function uploadToCloudinary(buffer, folder, options = {}) {
   return new Promise((resolve, reject) => {

@@ -10,17 +10,18 @@ function normalizeArabic(str) {
 }
 
 const LIST_SELECT = "name image category subCategory brand color storage salePrice originalPrice inStock freeDelivery deliveryTime warrantyYears installment taxIncluded colors discountPercent price";
+const LEAN_VIRTUALS = { virtuals: true };
 
 exports.getProducts = async (req, res) => {
   try {
     const { q } = req.query;
-    if (!q) return res.json(await Product.find().select(LIST_SELECT));
+    if (!q) return res.json(await Product.find().select(LIST_SELECT).lean(LEAN_VIRTUALS));
 
     const normalized = normalizeArabic(q.trim());
     const escaped = normalized.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const candidates = await Product.find(
       { name: { $regex: escaped.slice(0, 3), $options: "i" } }
-    ).select(LIST_SELECT);
+    ).select(LIST_SELECT).lean(LEAN_VIRTUALS);
 
     const filtered = candidates.filter((p) =>
       normalizeArabic(p.name).includes(normalized)

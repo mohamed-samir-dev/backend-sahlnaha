@@ -1,5 +1,4 @@
 const express = require("express");
-const jwt = require("jsonwebtoken");
 const Admin = require("../models/Admin");
 const Company = require("../models/Company");
 const Banner = require("../models/Banner");
@@ -13,26 +12,12 @@ const Bank = require("../models/Bank");
 const CategoryBanner = require("../models/CategoryBanner");
 const CardFieldSettings = require("../models/CardFieldSettings");
 const { makeImageUpload, makeFileUpload, uploadToCloudinary, deleteFromCloudinary } = require("../config/cloudinary");
+const authMiddleware = require("../middleware/auth");
 
 const upload = makeImageUpload();
-const uploadBankLogo = makeImageUpload();
-const uploadFooterImg = makeImageUpload();
 const uploadDoc = makeFileUpload();
-const uploadBanner = makeImageUpload();
-const uploadCategoryBanner = makeImageUpload();
 
 const router = express.Router();
-
-function authMiddleware(req, res, next) {
-  const token = req.cookies?.admin_token;
-  if (!token) return res.status(401).json({ error: "غير مصرح" });
-  try {
-    req.admin = jwt.verify(token, process.env.JWT_SECRET);
-    next();
-  } catch {
-    res.status(401).json({ error: "غير مصرح" });
-  }
-}
 
 // POST /api/admin/login
 router.post("/login", async (req, res) => {
@@ -237,7 +222,7 @@ router.get("/banners", async (req, res) => {
 });
 
 // POST /api/admin/banners/upload/:index
-router.post("/banners/upload/:index", authMiddleware, uploadBanner.single("image"), async (req, res) => {
+router.post("/banners/upload/:index", authMiddleware, upload.single("image"), async (req, res) => {
   try {
     const index = parseInt(req.params.index);
     let doc = await Banner.findOne();
@@ -552,7 +537,7 @@ router.get("/sub-categories/public", async (req, res) => {
 });
 
 // POST /api/admin/sub-categories/settings/image
-router.post("/sub-categories/settings/image", authMiddleware, makeImageUpload().single("image"), async (req, res) => {
+router.post("/sub-categories/settings/image", authMiddleware, upload.single("image"), async (req, res) => {
   try {
     const { category } = req.body;
     if (!category) return res.status(400).json({ error: "التصنيف مطلوب" });
@@ -610,9 +595,9 @@ router.patch("/sub-categories/max", authMiddleware, async (req, res) => {
 });
 
 // GET /api/admin/orders
-router.get("/orders", async (req, res) => {
+router.get("/orders", authMiddleware, async (req, res) => {
   try {
-    const orders = await Checkout.find().sort({ createdAt: -1 });
+    const orders = await Checkout.find().sort({ createdAt: -1 }).lean();
     res.json(orders);
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
@@ -648,7 +633,7 @@ router.put("/orders/:id/status", authMiddleware, async (req, res) => {
 // GET /api/admin/reviews (public - approved only)
 router.get("/reviews", async (req, res) => {
   try {
-    const reviews = await Review.find({ approved: true }).sort({ createdAt: -1 });
+    const reviews = await Review.find({ approved: true }).sort({ createdAt: -1 }).lean();
     res.json(reviews);
   } catch {
     res.status(500).json({ error: "خطأ في الخادم" });
@@ -658,7 +643,7 @@ router.get("/reviews", async (req, res) => {
 // GET /api/admin/reviews/all (admin - all reviews)
 router.get("/reviews/all", authMiddleware, async (req, res) => {
   try {
-    const reviews = await Review.find().sort({ createdAt: -1 });
+    const reviews = await Review.find().sort({ createdAt: -1 }).lean();
     res.json(reviews);
   } catch {
     res.status(500).json({ error: "خطأ في الخادم" });
@@ -741,7 +726,7 @@ router.delete("/reviews/:id", authMiddleware, async (req, res) => {
 });
 
 // POST /api/admin/products/upload-image
-router.post("/products/upload-image", authMiddleware, makeImageUpload().single("image"), async (req, res) => {
+router.post("/products/upload-image", authMiddleware, upload.single("image"), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: "لم يتم رفع صورة" });
     const result = await uploadToCloudinary(req.file.buffer, "products");
@@ -798,7 +783,7 @@ router.post("/products", authMiddleware, async (req, res) => {
 // GET /api/admin/products
 router.get("/products", authMiddleware, async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 }).select("name category originalPrice salePrice");
+    const products = await Product.find().sort({ createdAt: -1 }).select("name category originalPrice salePrice").lean();
     res.json(products);
   } catch {
     res.status(500).json({ error: "خطأ في الخادم" });
@@ -885,7 +870,7 @@ router.put("/products/:id", authMiddleware, async (req, res) => {
 });
 
 // POST /api/admin/company/footer-image/:key  (images: qrImage, img1, img2)
-router.post("/company/footer-image/:key", authMiddleware, uploadFooterImg.single("image"), async (req, res) => {
+router.post("/company/footer-image/:key", authMiddleware, upload.single("image"), async (req, res) => {
   try {
     const { key } = req.params;
     if (!["qrImage", "img1", "img2"].includes(key)) return res.status(400).json({ error: "حقل غير مسموح" });
@@ -921,7 +906,7 @@ router.post("/company/footer-file/:key", authMiddleware, uploadDoc.single("file"
 });
 
 // POST /api/admin/company/footer-items/image/:index
-router.post("/company/footer-items/image/:index", authMiddleware, uploadFooterImg.single("image"), async (req, res) => {
+router.post("/company/footer-items/image/:index", authMiddleware, upload.single("image"), async (req, res) => {
   try {
     const index = parseInt(req.params.index);
     if (!req.file) return res.status(400).json({ error: "لم يتم رفع صورة" });
@@ -1025,7 +1010,7 @@ router.get("/category-banners/:category", async (req, res) => {
 });
 
 // POST /api/admin/category-banners/:category/upload/:index
-router.post("/category-banners/:category/upload/:index", authMiddleware, uploadCategoryBanner.single("image"), async (req, res) => {
+router.post("/category-banners/:category/upload/:index", authMiddleware, upload.single("image"), async (req, res) => {
   try {
     const { category } = req.params;
     const index = parseInt(req.params.index);
@@ -1120,7 +1105,7 @@ router.get("/banks", authMiddleware, async (req, res) => {
 });
 
 // POST /api/admin/banks
-router.post("/banks", authMiddleware, uploadBankLogo.single("logo"), async (req, res) => {
+router.post("/banks", authMiddleware, upload.single("logo"), async (req, res) => {
   try {
     const { name, iban } = req.body;
     if (!name || !iban) return res.status(400).json({ error: "اسم البنك والآيبان مطلوبان" });
@@ -1137,7 +1122,7 @@ router.post("/banks", authMiddleware, uploadBankLogo.single("logo"), async (req,
 });
 
 // PUT /api/admin/banks/:id
-router.put("/banks/:id", authMiddleware, uploadBankLogo.single("logo"), async (req, res) => {
+router.put("/banks/:id", authMiddleware, upload.single("logo"), async (req, res) => {
   try {
     const bank = await Bank.findById(req.params.id);
     if (!bank) return res.status(404).json({ error: "البنك غير موجود" });

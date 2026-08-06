@@ -94,4 +94,8 @@ productSchema.virtual("price").get(function () {
   return this.salePrice || this.originalPrice;
 });
 
+productSchema.index({ name: 1 });
+productSchema.index({ category: 1 });
+productSchema.index({ subCategory: 1 });
+
 module.exports = mongoose.model("Product", productSchema);
